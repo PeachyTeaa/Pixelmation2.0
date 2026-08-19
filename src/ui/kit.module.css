@@ -232,6 +232,11 @@
   gap: 1rem;
 }
 
+.modalWide {
+  width: min(1040px, 100%);
+  max-height: 88vh;
+}
+
 .modalHead {
   display: flex;
   align-items: flex-start;

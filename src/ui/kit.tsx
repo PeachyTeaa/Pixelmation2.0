@@ -155,12 +155,15 @@ export function Modal({
   onClose,
   children,
   footer,
+  wide,
 }: {
   open: boolean;
   title: ReactNode;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  /** Широкое окно — для списков и галерей. */
+  wide?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -175,7 +178,7 @@ export function Modal({
   return (
     <div className={styles.overlay} onMouseDown={onClose} role="presentation">
       <div
-        className={styles.modal}
+        className={cx(styles.modal, wide && styles.modalWide)}
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

@@ -5,12 +5,13 @@ import styles from './Header.module.css';
 
 interface HeaderProps {
   onSave: () => void;
+  onVault: () => void;
   onOpen: () => void;
   onHelp: () => void;
   onHome: () => void;
 }
 
-export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
+export function Header({ onSave, onOpen, onHelp, onHome, onVault }: HeaderProps) {
   const mode = useEditorStore((state) => state.mode);
   const name = useEditorStore((state) => state.documentName);
   const dirty = useEditorStore((state) => state.dirty);
@@ -54,6 +55,9 @@ export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
               Сохранить
             </Button>
           )}
+          <Button size="sm" icon onClick={onVault} title="Восстановление: архив последних работ">
+            ⟲
+          </Button>
           <Button
             size="sm"
             icon
