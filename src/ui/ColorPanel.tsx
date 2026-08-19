@@ -21,6 +21,10 @@ export function ColorPanel() {
         <span className={styles.swatch} title={color ?? 'прозрачный'}>
           {color && <span className={styles.swatchFill} style={{ background: color }} />}
         </span>
+        <div className={styles.currentValue}>
+          <Label>Выбран</Label>
+          <span className={styles.currentValueText}>{color ?? 'прозрачный'}</span>
+        </div>
         <input
           className={styles.colorInput}
           type="color"
@@ -28,17 +32,18 @@ export function ColorPanel() {
           onChange={(event) => setColor(withAlpha(`${event.target.value}ff`, alpha || 255))}
           aria-label="Цвет"
         />
-        <div style={{ flex: 1 }}>
-          <Label>Альфа · {alpha}</Label>
-          <input
-            className={styles.slider}
-            type="range"
-            min={0}
-            max={255}
-            value={alpha}
-            onChange={(event) => setColor(withAlpha(color ?? lastColor, +event.target.value))}
-          />
-        </div>
+      </div>
+
+      <div>
+        <Label>Альфа · {alpha}</Label>
+        <input
+          className={styles.slider}
+          type="range"
+          min={0}
+          max={255}
+          value={alpha}
+          onChange={(event) => setColor(withAlpha(color ?? lastColor, +event.target.value))}
+        />
       </div>
 
       <Row>
@@ -93,7 +98,7 @@ export function BackgroundControls() {
             aria-label="Фон холста"
           />
           <Button size="sm" active={canvasBg === null} onClick={() => setCanvasBg(null)}>
-            Шахматка
+            Без фона
           </Button>
         </Row>
       </div>

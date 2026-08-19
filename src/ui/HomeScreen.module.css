@@ -1,6 +1,6 @@
 .screen {
   position: relative;
-  min-height: calc(100vh - 61px);
+  min-height: calc(100vh - var(--header-h));
   display: grid;
   place-items: center;
   padding: clamp(1.5rem, 5vh, 4rem) var(--gutter);

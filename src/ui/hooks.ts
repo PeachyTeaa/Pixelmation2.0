@@ -28,86 +28,90 @@ export function useHotkeys({ onSave, onToggleHelp }: HotkeyHandlers): void {
       const state = useEditorStore.getState();
       if (state.mode === null) return;
       const isAnimation = state.mode === 'animation' && state.animationTab === 'slides';
-      const key = event.key.toLowerCase();
+      // Ориентируемся на физическую клавишу, а не на букву: иначе на русской
+      // раскладке Ctrl+S приходит как «ы», и ни один бинд не срабатывает.
+      const code = event.code;
 
       if (event.ctrlKey || event.metaKey) {
-        if (key === 'z') {
-          event.preventDefault();
-          if (event.shiftKey) state.redo();
-          else state.undo();
-          return;
+        switch (code) {
+          case 'KeyZ':
+            event.preventDefault();
+            if (event.shiftKey) state.redo();
+            else state.undo();
+            return;
+          case 'KeyY':
+            event.preventDefault();
+            state.redo();
+            return;
+          case 'KeyS':
+            event.preventDefault();
+            onSave();
+            return;
+          default:
+            return;
         }
-        if (key === 'y') {
-          event.preventDefault();
-          state.redo();
-          return;
-        }
-        if (key === 's') {
-          event.preventDefault();
-          onSave();
-          return;
-        }
-        return;
       }
 
       if (event.altKey) return;
 
-      switch (key) {
-        case 'a':
-        case 'arrowleft':
+      switch (code) {
+        case 'KeyA':
+        case 'ArrowLeft':
           if (isAnimation) {
             event.preventDefault();
             state.prevSlide();
           }
           return;
-        case 'd':
-        case 'arrowright':
+        case 'KeyD':
+        case 'ArrowRight':
           if (isAnimation) {
             event.preventDefault();
             state.nextSlide();
           }
           return;
-        case 'e':
+        case 'KeyE':
           event.preventDefault();
-          if (state.mode === 'animation' && state.animationTab === 'slides') state.setRef(null);
+          if (isAnimation) state.setRef(null);
           else state.setTransparentColor();
           return;
-        case 'g':
+        case 'KeyG':
           event.preventDefault();
           if (event.shiftKey) state.toggleGrid();
           else state.setTool('fill');
           return;
-        case 'f':
+        case 'KeyF':
           event.preventDefault();
           state.setTool('move');
           return;
-        case 'b':
+        case 'KeyB':
           state.setTool('pen');
           return;
-        case 'x':
+        case 'KeyX':
           state.setTool('eraser');
           return;
-        case 'i':
+        case 'KeyI':
           state.setTool('picker');
           return;
-        case 'l':
+        case 'KeyL':
           state.setTool('line');
           return;
-        case 'r':
+        case 'KeyR':
           state.setTool('rect');
           return;
-        case 'o':
+        case 'KeyO':
           state.setTool('ellipse');
           return;
-        case ' ':
+        case 'Space':
           if (isAnimation) {
             event.preventDefault();
             state.setPlaying(!state.isPlaying);
           }
           return;
-        case '?':
-          event.preventDefault();
-          onToggleHelp();
+        case 'Slash':
+          if (event.shiftKey) {
+            event.preventDefault();
+            onToggleHelp();
+          }
           return;
         default:
       }

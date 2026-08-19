@@ -30,20 +30,18 @@ export function ToolsPanel() {
 
   return (
     <Panel title="Инструменты">
-      <div className={styles.tools}>
+      <select
+        className={styles.select}
+        value={tool}
+        onChange={(event) => setTool(event.target.value as Tool)}
+        aria-label="Инструмент"
+      >
         {TOOLS.map((item) => (
-          <Button
-            key={item.id}
-            className={styles.toolButton}
-            active={tool === item.id}
-            onClick={() => setTool(item.id)}
-            title={`${item.name} (${item.hotkey})`}
-          >
-            <span>{item.name}</span>
-            <span className={styles.toolKey}>{item.hotkey}</span>
-          </Button>
+          <option key={item.id} value={item.id}>
+            {item.name} · {item.hotkey}
+          </option>
         ))}
-      </div>
+      </select>
 
       <Switch checked={showGrid} onChange={setShowGrid}>
         Сетка · Shift+G

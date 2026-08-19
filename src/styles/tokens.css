@@ -32,6 +32,7 @@
 
   /* прочее */
   --header-bg: rgba(11, 14, 20, 0.72);
+  --header-h: 44px;
   --gutter: clamp(1rem, 3vw, 2.5rem);
   --content-max: 1440px;
   --checker-a: rgba(255, 255, 255, 0.06);

@@ -95,22 +95,10 @@ export function PixelCanvas({
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.clearRect(0, 0, width, height);
 
-    // подложка: сплошной цвет или шахматка прозрачности
+    // Подложка: либо выбранный цвет, либо ничего — прозрачные клетки показывают фон страницы.
     if (background) {
       context.fillStyle = background;
       context.fillRect(0, 0, width, height);
-    } else {
-      const step = Math.max(4, Math.round(cellSize / 2));
-      const light = isLightTheme();
-      context.fillStyle = light ? 'rgba(15,19,27,0.05)' : 'rgba(255,255,255,0.05)';
-      context.fillRect(0, 0, width, height);
-      context.fillStyle = light ? 'rgba(15,19,27,0.09)' : 'rgba(255,255,255,0.045)';
-      for (let y = 0; y < height; y += step) {
-        for (let x = 0; x < width; x += step) {
-          if (((x / step) | 0) % 2 === ((y / step) | 0) % 2) continue;
-          context.fillRect(x, y, Math.min(step, width - x), Math.min(step, height - y));
-        }
-      }
     }
 
     for (let y = 0; y < rows; y++) {

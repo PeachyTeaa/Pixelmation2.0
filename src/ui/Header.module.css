@@ -10,27 +10,29 @@
 .inner {
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0.7rem var(--gutter);
+  min-height: var(--header-h);
+  padding: 0.25rem var(--gutter);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .brand {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.3rem;
   background: none;
   border: none;
   padding: 0;
   color: inherit;
+  flex: none;
 }
 
 .brandName {
   font-weight: 650;
   letter-spacing: -0.022em;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .brandAccent {
@@ -41,25 +43,28 @@
 }
 
 .chip {
-  padding: 0.15rem 0.55rem;
+  padding: 0.05rem 0.45rem;
   border-radius: var(--r-pill);
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-2);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex: none;
 }
 
 .name {
-  flex: 1 1 200px;
-  min-width: 140px;
-  max-width: 320px;
-  padding: 0.35rem 0.6rem;
+  flex: 1 1 120px;
+  min-width: 90px;
+  max-width: 240px;
+  padding: 0.2rem 0.5rem;
   border-radius: var(--r-8);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text);
+  font-size: 0.85rem;
 }
 
 :global(.theme-light) .name {
@@ -76,9 +81,9 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
   margin-left: auto;
-  flex-wrap: wrap;
+  flex: none;
 }
 
 .dot {
@@ -91,4 +96,56 @@
 
 .saved {
   background: var(--success);
+}
+
+/* Индикатор текущего цвета: всегда на виду, не занимает высоту */
+.current {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  flex: none;
+}
+
+.currentSwatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+  flex: none;
+}
+
+.currentFill {
+  position: absolute;
+  inset: 0;
+}
+
+.currentText {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .currentText,
+  .brandName {
+    display: none;
+  }
+
+  .inner {
+    flex-wrap: wrap;
+  }
 }

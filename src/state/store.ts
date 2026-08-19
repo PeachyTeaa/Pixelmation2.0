@@ -159,7 +159,7 @@ const initialView: ViewState = {
   color: '#e9ecf2ff',
   lastColor: '#e9ecf2ff',
   currentRef: null,
-  showGrid: true,
+  showGrid: false,
   wrapShift: false,
   fillShape: false,
   zoom: null,
@@ -501,8 +501,14 @@ export const useEditorStore = create<EditorState>()(
     },
     {
       name: 'pixelmation.editor',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      // Во второй версии сетка стала выключенной по умолчанию — сбрасываем старую настройку.
+      migrate: (state, version) => {
+        const saved = (state ?? {}) as Partial<EditorState>;
+        if (version < 2) return { ...saved, showGrid: false } as EditorState;
+        return saved as EditorState;
+      },
       // Храним документ и настройки вида; история и проигрывание — состояние сессии.
       partialize: (state) =>
         ({

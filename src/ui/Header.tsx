@@ -1,4 +1,5 @@
-import { useEditorStore } from '~/state/store';
+import { resolveRef } from '~/core';
+import { isTextureSurface, useEditorStore } from '~/state/store';
 import { Button } from './kit';
 import styles from './Header.module.css';
 
@@ -24,7 +25,6 @@ export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
           <span className={styles.brandName}>
             Pixel<span className={styles.brandAccent}>mation</span>
           </span>
-          <span className={styles.chip}>2.0</span>
         </button>
 
         {mode && (
@@ -41,6 +41,7 @@ export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
               className={`${styles.dot} ${dirty ? '' : styles.saved}`}
               title={dirty ? 'Есть несохранённые изменения' : 'Всё сохранено'}
             />
+            <CurrentColor />
           </>
         )}
 
@@ -53,7 +54,12 @@ export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
               Сохранить
             </Button>
           )}
-          <Button size="sm" icon onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Сменить тему">
+          <Button
+            size="sm"
+            icon
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title="Сменить тему"
+          >
             {theme === 'dark' ? '☾' : '☀'}
           </Button>
           <Button size="sm" icon onClick={onHelp} title="Справка и горячие клавиши (?)">
@@ -62,5 +68,29 @@ export function Header({ onSave, onOpen, onHelp, onHome }: HeaderProps) {
         </div>
       </div>
     </header>
+  );
+}
+
+/** Чем сейчас рисуем: цвет текстуры или пиксель текстуры, выбранный для кадра. */
+function CurrentColor() {
+  const color = useEditorStore((state) =>
+    isTextureSurface(state) ? state.color : resolveRef(state.texture, state.currentRef),
+  );
+  const ref = useEditorStore((state) => (isTextureSurface(state) ? null : state.currentRef));
+  const label = color === null ? 'прозрачный' : color;
+
+  return (
+    <span
+      className={styles.current}
+      title={ref ? `Пиксель текстуры x=${ref.x}, y=${ref.y} — ${label}` : `Текущий цвет: ${label}`}
+    >
+      <span className={styles.currentSwatch}>
+        {color && <span className={styles.currentFill} style={{ background: color }} />}
+      </span>
+      <span className={styles.currentText}>
+        {label}
+        {ref && ` · ${ref.x}:${ref.y}`}
+      </span>
+    </span>
   );
 }

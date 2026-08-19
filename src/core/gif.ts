@@ -126,9 +126,11 @@ export function lzwEncode(indices: Uint8Array, minCodeSize: number): number[] {
     }
     writer.write(prefix, codeSize);
     if (nextCode < 4096) {
+      // Ширина кода растёт ПЕРЕД добавлением записи, которая в неё уже не влезает:
+      // декодер отстаёт на одну запись, и любой другой порядок ломает поток.
+      if (nextCode >= 1 << codeSize && codeSize < 12) codeSize++;
       dict.set(key, nextCode);
       nextCode++;
-      if (nextCode >= 1 << codeSize && codeSize < 12) codeSize++;
     } else {
       writer.write(clearCode, codeSize);
       dict = new Map();

@@ -13,8 +13,8 @@
   flex-direction: column;
   gap: 1rem;
   position: sticky;
-  top: 76px;
-  max-height: calc(100vh - 96px);
+  top: calc(var(--header-h) + 0.75rem);
+  max-height: calc(100vh - var(--header-h) - 1.5rem);
   overflow: auto;
   padding-right: 2px;
 }
@@ -27,35 +27,13 @@
 }
 
 .canvasArea {
-  height: clamp(340px, 58vh, 720px);
+  height: clamp(340px, 62vh, 760px);
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--r-16);
   display: grid;
   position: relative;
   overflow: hidden;
-}
-
-.tools {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
-  gap: 0.35rem;
-}
-
-.toolButton {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  padding: 0.4rem 0.5rem;
-  line-height: 1.25;
-}
-
-.toolKey {
-  font-size: 0.68rem;
-  color: var(--text-3);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .swatchRow {
@@ -242,4 +220,46 @@
     position: static;
     max-height: none;
   }
+}
+
+.currentValue {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.currentValueText {
+  display: block;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--r-8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+:global(.theme-light) .select {
+  background: rgba(15, 19, 27, 0.04);
+  border-color: rgba(15, 19, 27, 0.14);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(109, 139, 255, 0.28);
+}
+
+.select option {
+  background: var(--bg-subtle);
+  color: var(--text);
 }

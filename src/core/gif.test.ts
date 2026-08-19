@@ -51,8 +51,7 @@ function lzwDecode(bytes: Uint8Array, minCodeSize: number): number[] {
     out.push(...entry);
     if (previous) {
       dict.push([...previous, entry[0]]);
-      // Декодер отстаёт от энкодера на одну запись, поэтому растёт на шаг раньше.
-      if (dict.length + 1 === 1 << codeSize && codeSize < 12) codeSize++;
+      if (dict.length === 1 << codeSize && codeSize < 12) codeSize++;
     }
     previous = entry;
   }
@@ -211,6 +210,20 @@ describe('encodeGif', () => {
     const gif = encodeGif([cellsToImage(cells)]);
     const parsed = parseGif(gif);
     expect(parsed.frames[0]).toHaveLength(400);
+  });
+
+  it('байт в байт совпадает с эталоном, проверенным декодером браузера', () => {
+    // Эталон снят с рабочего файла и проверён Chrome ImageDecoder: он ловит
+    // рассинхрон ширины кода LZW, который собственный декодер не замечает.
+    const cells: TextureCells = [
+      [red, red, red, red],
+      [green, green, green, green],
+      [null, null, null, null],
+      [null, null, null, null],
+    ];
+    const gif = encodeGif([cellsToImage(cells)], { delayMs: 100 });
+    const base64 = Buffer.from(gif).toString('base64');
+    expect(base64).toBe('R0lGODlhBAAEAIEAAP8AAAD/AAAAAAAAACH5BAkKAAIALAAAAAAEAAQAAAIGhBEZws0FADs=');
   });
 
   it('ругается на кадры разного размера', () => {
