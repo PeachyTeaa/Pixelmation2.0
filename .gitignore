@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+*.local
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Рабочие файлы агента (рендеры, черновики)
+/scratch/
+# Исходники первой версии лежат рядом как справочник, у них свой репозиторий
+Pixelmation/

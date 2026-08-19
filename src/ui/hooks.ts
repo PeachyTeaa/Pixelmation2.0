@@ -1,0 +1,222 @@
+import { useEffect, useState } from 'react';
+import { useEditorStore } from '~/state/store';
+import { readProjectFile } from '~/services/files';
+import { toast, toastError } from '~/services/toast';
+
+/** Не перехватываем горячие клавиши, пока пользователь печатает. */
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName.toLowerCase();
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable;
+}
+
+export interface HotkeyHandlers {
+  onSave: () => void;
+  onToggleHelp: () => void;
+}
+
+/**
+ * Горячие клавиши редактора.
+ *
+ * A / ← и D / → — слайды по кругу, Ctrl+Z и Ctrl+Shift+Z — история,
+ * Ctrl+S — сохранение, E — прозрачный цвет, G — заливка, F — перемещение.
+ */
+export function useHotkeys({ onSave, onToggleHelp }: HotkeyHandlers): void {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isTyping(event.target)) return;
+      const state = useEditorStore.getState();
+      if (state.mode === null) return;
+      const isAnimation = state.mode === 'animation' && state.animationTab === 'slides';
+      const key = event.key.toLowerCase();
+
+      if (event.ctrlKey || event.metaKey) {
+        if (key === 'z') {
+          event.preventDefault();
+          if (event.shiftKey) state.redo();
+          else state.undo();
+          return;
+        }
+        if (key === 'y') {
+          event.preventDefault();
+          state.redo();
+          return;
+        }
+        if (key === 's') {
+          event.preventDefault();
+          onSave();
+          return;
+        }
+        return;
+      }
+
+      if (event.altKey) return;
+
+      switch (key) {
+        case 'a':
+        case 'arrowleft':
+          if (isAnimation) {
+            event.preventDefault();
+            state.prevSlide();
+          }
+          return;
+        case 'd':
+        case 'arrowright':
+          if (isAnimation) {
+            event.preventDefault();
+            state.nextSlide();
+          }
+          return;
+        case 'e':
+          event.preventDefault();
+          if (state.mode === 'animation' && state.animationTab === 'slides') state.setRef(null);
+          else state.setTransparentColor();
+          return;
+        case 'g':
+          event.preventDefault();
+          if (event.shiftKey) state.toggleGrid();
+          else state.setTool('fill');
+          return;
+        case 'f':
+          event.preventDefault();
+          state.setTool('move');
+          return;
+        case 'b':
+          state.setTool('pen');
+          return;
+        case 'x':
+          state.setTool('eraser');
+          return;
+        case 'i':
+          state.setTool('picker');
+          return;
+        case 'l':
+          state.setTool('line');
+          return;
+        case 'r':
+          state.setTool('rect');
+          return;
+        case 'o':
+          state.setTool('ellipse');
+          return;
+        case ' ':
+          if (isAnimation) {
+            event.preventDefault();
+            state.setPlaying(!state.isPlaying);
+          }
+          return;
+        case '?':
+          event.preventDefault();
+          onToggleHelp();
+          return;
+        default:
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onSave, onToggleHelp]);
+}
+
+/** Предупреждение о несохранённом прогрессе при закрытии вкладки. */
+export function useUnsavedWarning(): void {
+  const dirty = useEditorStore((state) => state.dirty);
+  const mode = useEditorStore((state) => state.mode);
+
+  useEffect(() => {
+    if (!dirty || mode === null) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty, mode]);
+}
+
+/** Перетаскивание файлов проекта в окно. */
+export function useFileDrop(): boolean {
+  const [isOver, setIsOver] = useState(false);
+
+  useEffect(() => {
+    let depth = 0;
+
+    const onDragEnter = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes('Files')) return;
+      depth++;
+      setIsOver(true);
+    };
+    const onDragOver = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes('Files')) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    };
+    const onDragLeave = () => {
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) setIsOver(false);
+    };
+    const onDrop = async (event: DragEvent) => {
+      if (!event.dataTransfer?.files?.length) return;
+      event.preventDefault();
+      depth = 0;
+      setIsOver(false);
+      const file = event.dataTransfer.files[0];
+      try {
+        const result = await readProjectFile(file);
+        const store = useEditorStore.getState();
+        if (result.kind === 'texture') {
+          store.loadTexture(result.texture);
+          toast(`Текстура «${result.texture.name || file.name}» загружена`);
+        } else {
+          store.loadAnimation(result.animation);
+          toast(`Анимация «${result.animation.name || file.name}» загружена`);
+        }
+      } catch (error) {
+        toastError(error);
+      }
+    };
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
+
+  return isOver;
+}
+
+/** Проигрывание анимации: крутит слайды с выбранной скоростью. */
+export function usePlayback(): void {
+  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const speed = useEditorStore((state) => state.speed);
+  const total = useEditorStore((state) => state.slides.length);
+
+  useEffect(() => {
+    if (!isPlaying || total < 2) return;
+    const timer = window.setInterval(() => useEditorStore.getState().nextSlide(), speed);
+    return () => window.clearInterval(timer);
+  }, [isPlaying, speed, total]);
+}
+
+/** Держит класс темы на <html> в согласии со store. */
+export function useThemeClass(): void {
+  const theme = useEditorStore((state) => state.theme);
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('theme-dark', theme === 'dark');
+    root.classList.toggle('theme-light', theme === 'light');
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem('pixelmation.theme', theme);
+    } catch {
+      // приватный режим — просто не запоминаем
+    }
+  }, [theme]);
+}

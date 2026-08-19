@@ -1,0 +1,155 @@
+.screen {
+  position: relative;
+  min-height: calc(100vh - 61px);
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 5vh, 4rem) var(--gutter);
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  max-width: 620px;
+  max-height: 620px;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+.blobBlue {
+  top: -12vh;
+  left: -8vw;
+  background: #3b5bfd;
+  opacity: 0.28;
+}
+
+.blobCyan {
+  bottom: -14vh;
+  right: -6vw;
+  background: #22d3ee;
+  opacity: 0.2;
+}
+
+.card {
+  position: relative;
+  width: min(720px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-22);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.lead {
+  color: var(--text-2);
+  max-width: 52ch;
+}
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.mode {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  padding: 1rem;
+  border-radius: var(--r-16);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mode::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradient);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mode:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.modeActive {
+  border-color: var(--brand);
+  background: rgba(109, 139, 255, 0.12);
+}
+
+.modeActive::after {
+  opacity: 1;
+}
+
+.modeName {
+  font-weight: 650;
+  letter-spacing: -0.022em;
+}
+
+.modeHint {
+  color: var(--text-2);
+  font-size: 0.86rem;
+}
+
+.sizes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drop {
+  color: var(--text-3);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dropOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: rgba(11, 14, 20, 0.72);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.dropCard {
+  padding: 2rem 3rem;
+  border-radius: var(--r-22);
+  border: 2px dashed var(--brand);
+  background: var(--surface);
+  font-weight: 650;
+  letter-spacing: -0.022em;
+}

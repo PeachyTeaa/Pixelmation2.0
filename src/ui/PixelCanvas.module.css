@@ -1,0 +1,45 @@
+.wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.canvas {
+  display: block;
+  image-rendering: pixelated;
+  border-radius: var(--r-8);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.move {
+  cursor: grab;
+}
+
+.picker {
+  cursor: copy;
+}
+
+.badge {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}

@@ -1,0 +1,62 @@
+/* Дизайн-система Pixelmation 2.0. Тема переключается классом на <html>. */
+
+:root {
+  /* палитра (тёмная — база) */
+  --bg: #0b0e14;
+  --bg-subtle: #0f131b;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #e9ecf2;
+  --text-2: #9aa4b8;
+  --text-3: #6d7789;
+  --brand: #6d8bff;
+  --accent: #3ddced;
+  --gradient: linear-gradient(135deg, #3b5bfd, #6d5cf7 55%, #22d3ee);
+  --success: #12b76a;
+  --danger: #f04438;
+  --warning: #f79009;
+
+  /* геометрия */
+  --r-8: 8px;
+  --r-12: 12px;
+  --r-16: 16px;
+  --r-22: 22px;
+  --r-pill: 999px;
+
+  /* тени */
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --glow-brand: 0 6px 18px rgba(59, 91, 253, 0.32);
+
+  /* прочее */
+  --header-bg: rgba(11, 14, 20, 0.72);
+  --gutter: clamp(1rem, 3vw, 2.5rem);
+  --content-max: 1440px;
+  --checker-a: rgba(255, 255, 255, 0.06);
+  --checker-b: rgba(255, 255, 255, 0.02);
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+.theme-light {
+  --bg: #f6f7fb;
+  --bg-subtle: #ffffff;
+  --surface: rgba(15, 19, 27, 0.035);
+  --surface-2: rgba(15, 19, 27, 0.06);
+  --border: rgba(15, 19, 27, 0.1);
+  --border-strong: rgba(15, 19, 27, 0.18);
+  --text: #131722;
+  --text-2: #5b6577;
+  --text-3: #838d9f;
+  --header-bg: rgba(246, 247, 251, 0.76);
+  --shadow: 0 8px 24px rgba(15, 19, 27, 0.12);
+  --shadow-lg: 0 24px 60px rgba(15, 19, 27, 0.16);
+  --checker-a: rgba(15, 19, 27, 0.08);
+  --checker-b: rgba(15, 19, 27, 0.03);
+
+  color-scheme: light;
+}
