@@ -37,3 +37,9 @@ npm run pxl -- help  # командная строка редактора
 
 В терминале: `npm run pxl -- draw файл --ascii "..#|.#." --legend "#=#ff0000ff"`,
 затем `npm run pxl -- show файл --rulers` или `render` в PNG.
+
+## Иконка сайта
+
+Лежит в `assets/favicon.pxlmt` — нарисована в самом редакторе. После правки
+запусти `npm run favicon`: он пересоберёт `public/favicon.svg`,
+`public/favicon-96.png` и `public/apple-touch-icon.png`.

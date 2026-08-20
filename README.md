@@ -15,6 +15,7 @@ npm run dev        # http://localhost:3000
 npm run build      # сборка в dist/
 npm run test:run   # тесты ядра, состояния и API агента
 npm run pxl -- help  # командная строка редактора
+npm run favicon    # пересобрать иконки сайта из assets/favicon.pxlmt
 ```
 
 ## Что умеет
@@ -109,6 +110,7 @@ src/ui/       React-компоненты интерфейса
 src/agent/    window.pixelmation — руки агента в браузере
 src/services/ файлы, экспорт картинок, уведомления
 tools/pxl.ts  командная строка
+tools/make-favicon.ts  сборка иконок сайта из assets/favicon.pxlmt
 docs/         документация
 Pixelmation/  исходники первой версии, оставлены как справочник
 ```

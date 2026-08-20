@@ -17,3 +17,6 @@ Pixelmation/
 
 .vercel
 .env*
+
+# Служебный файл инкрементальной сборки TypeScript
+tsconfig.tsbuildinfo
