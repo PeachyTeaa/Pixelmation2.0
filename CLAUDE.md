@@ -27,6 +27,10 @@ npm run pxl -- help  # командная строка редактора
 
 ## Как рисовать самому
 
+Перед новой анимацией или текстурой загляни в `examples/` — там лежат
+эталонные `.pxlma`/`.pxlmt`, с которых берётся палитра, размер и характер
+движения (`npm run pxl -- info examples/файл`, затем `show`).
+
 В браузере: `window.pixelmation` (см. `docs/agent-api.md`), быстрее всего —
 `pixelmation.drawAscii(rows, legend, origin)` и `pixelmation.preview()` для
 проверки результата.
