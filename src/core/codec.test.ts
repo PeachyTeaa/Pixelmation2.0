@@ -20,25 +20,22 @@ function sampleTexture() {
 }
 
 describe('.pxlmt', () => {
-  it('пишет и читает современный формат без потерь', () => {
+  it('пишет клетки строкой и читает обратно без потерь', () => {
     const texture = sampleTexture();
     const json = serializeTexture(texture);
     expect(JSON.parse(json)).toEqual({
       name: 'герой',
-      cells: [
-        ['#ff0000ff', '#ff0000ff'],
-        [null, '#00ff0080'],
-      ],
+      cells: '1=2.#ff0000ff;1=1.null,1.#00ff0080',
     });
     expect(parseTexture(json)).toEqual(texture);
   });
 
-  it('читает legacy-строку с RLE', () => {
-    const legacy = JSON.stringify({
+  it('читает строку с RLE', () => {
+    const packed = JSON.stringify({
       name: 'старый',
       cells: '1=2.#ff0000ff;1=1.null,1.#00ff00ff',
     });
-    const texture = parseTexture(legacy);
+    const texture = parseTexture(packed);
     expect(texture.name).toBe('старый');
     expect(texture.cells).toEqual([
       ['#ff0000ff', '#ff0000ff'],
@@ -51,10 +48,17 @@ describe('.pxlmt', () => {
     expect(texture.cells).toEqual([[null, null, null]]);
   });
 
-  it('умеет писать обратно в legacy-формат', () => {
-    const legacy = JSON.parse(serializeTexture(sampleTexture(), { legacy: true }));
-    expect(typeof legacy.cells).toBe('string');
-    expect(parseTexture(JSON.stringify(legacy))).toEqual(sampleTexture());
+  it('читает legacy-массив клеток, но пересохраняет его строкой', () => {
+    const legacy = JSON.stringify({
+      name: 'герой',
+      cells: [
+        ['#ff0000ff', '#ff0000ff'],
+        [null, '#00ff0080'],
+      ],
+    });
+    const texture = parseTexture(legacy);
+    expect(texture).toEqual(sampleTexture());
+    expect(typeof JSON.parse(serializeTexture(texture)).cells).toBe('string');
   });
 
   it('сообщает понятную ошибку на кривом файле', () => {
@@ -65,16 +69,19 @@ describe('.pxlmt', () => {
 });
 
 describe('.pxlma', () => {
-  it('пишет и читает современный формат', () => {
+  it('пишет кадры строкой и читает обратно', () => {
     const animation = setRef(createAnimation(sampleTexture(), 'бег'), 0, 1, 1, { x: 0, y: 0 });
+    const json = JSON.parse(serializeAnimation(animation));
+    expect(typeof json.slides).toBe('string');
+    expect(typeof json.texture.cells).toBe('string');
     const parsed = parseAnimation(serializeAnimation(animation));
     expect(parsed.name).toBe('бег');
     expect(parsed.slides[0][1][1]).toEqual({ x: 0, y: 0 });
     expect(parsed.texture).toEqual(sampleTexture());
   });
 
-  it('читает legacy-анимацию и переставляет оси ссылок', () => {
-    // legacy: ссылка "1-0" означала строку 1, столбец 0 → современное {x: 0, y: 1}
+  it('читает упакованные кадры и переставляет оси ссылок', () => {
+    // в файле ссылка "1-0" — это строка 1, столбец 0 → точка {x: 0, y: 1}
     const legacy = JSON.stringify({
       name: 'старая',
       slides: '1!1=1.1-0,1.null;1=2.null',
@@ -86,13 +93,17 @@ describe('.pxlma', () => {
     expect(animation.slides[0][0][1]).toBeNull();
   });
 
-  it('legacy-запись читается обратно', () => {
-    const animation = setRef(createAnimation(sampleTexture(), 'бег'), 0, 1, 1, { x: 1, y: 0 });
-    const legacy = JSON.parse(serializeAnimation(animation, { legacy: true }));
-    expect(typeof legacy.slides).toBe('string');
-    expect(typeof legacy.texture.cells).toBe('string');
-    const parsed = parseAnimation(JSON.stringify(legacy));
-    expect(parsed.slides[0][1][1]).toEqual({ x: 1, y: 0 });
+  it('читает legacy-кадры из массивов и пересохраняет их строкой', () => {
+    const legacy = JSON.stringify({
+      name: 'старая',
+      slides: [[[{ x: 1, y: 0 }, null], [null, null]]],
+      texture: { name: 'т', cells: [['#ff0000ff', '#00ff00ff'], [null, null]] },
+    });
+    const animation = parseAnimation(legacy);
+    expect(animation.slides[0][0][0]).toEqual({ x: 1, y: 0 });
+    const again = JSON.parse(serializeAnimation(animation));
+    expect(typeof again.slides).toBe('string');
+    expect(parseAnimation(JSON.stringify(again)).slides[0][0][0]).toEqual({ x: 1, y: 0 });
   });
 
   it('выкидывает ссылки на прозрачные пиксели при сохранении', () => {

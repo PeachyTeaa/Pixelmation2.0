@@ -18,14 +18,14 @@ export function currentAnimation(): Animation {
 }
 
 /** Сохраняет открытый документ (Ctrl+S). */
-export function saveCurrentDocument(options: { legacy?: boolean } = {}): void {
+export function saveCurrentDocument(): void {
   const state = useEditorStore.getState();
   if (!state.mode) return;
   try {
     const fileName =
       state.mode === 'texture'
-        ? saveTexture({ ...currentTexture(), name: state.documentName }, options)
-        : saveAnimation(currentAnimation(), options);
+        ? saveTexture({ ...currentTexture(), name: state.documentName })
+        : saveAnimation(currentAnimation());
     state.markSaved();
     toast(`Сохранено: ${fileName}`);
   } catch (error) {

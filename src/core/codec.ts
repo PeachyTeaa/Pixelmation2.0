@@ -1,11 +1,15 @@
 /**
  * Чтение и запись форматов проекта.
  *
- * `.pxlmt` — текстура:   `{ "name": string, "cells": (string|null)[][] }`
- * `.pxlma` — анимация:   `{ "name": string, "slides": ({x,y}|null)[][][], "texture": pxlmt }`
+ * Пишем всегда компактно: `cells` и `slides` — RLE-строки, ссылка на пиксель
+ * текстуры записывается как `"строка-столбец"`.
  *
- * Дополнительно понимается legacy-формат Pixelmation 1.x, где `cells` и `slides`
- * были RLE-строками, а ссылки хранились с переставленными осями (`x` = строка).
+ * `.pxlmt` — текстура:   `{ "name": string, "cells": string }`
+ * `.pxlma` — анимация:   `{ "name": string, "slides": string, "texture": pxlmt }`
+ *
+ * При чтении дополнительно понимается legacy-форма тех же полей — развёрнутые
+ * массивы `(string|null)[][]` и `({x,y}|null)[][][]`. Такие файлы открываются,
+ * но обратно записываются уже строками.
  */
 import { normalizeColor } from './color';
 import { normalizeAnimation, sanitizeAnimation } from './animation';
@@ -27,12 +31,12 @@ export const TEXTURE_EXT = '.pxlmt';
 export const ANIMATION_EXT = '.pxlma';
 
 /* ------------------------------------------------------------------ *
- * legacy RLE (Pixelmation 1.x)
+ * RLE-упаковка: в этом виде данные лежат в файлах
  * ------------------------------------------------------------------ */
 
-function decodeLegacyRows(packed: string): string[][] {
+function decodeRows(packed: string): string[][] {
   if (typeof packed !== 'string' || packed.length === 0) {
-    throw new PixelmationFormatError('Пустая legacy-строка клеток');
+    throw new PixelmationFormatError('Пустая строка клеток');
   }
   const rows: string[][] = [];
   for (const chunk of packed.split(';')) {
@@ -40,7 +44,7 @@ function decodeLegacyRows(packed: string): string[][] {
     const [countRaw, rowRaw = ''] = splitOnce(chunk, '=');
     const count = Number(countRaw);
     if (!Number.isFinite(count) || count <= 0) {
-      throw new PixelmationFormatError(`Некорректный повтор строки в legacy-данных: ${chunk}`);
+      throw new PixelmationFormatError(`Некорректный повтор строки в упакованных данных: ${chunk}`);
     }
     const row: string[] = [];
     for (const cellChunk of rowRaw.split(',')) {
@@ -48,13 +52,13 @@ function decodeLegacyRows(packed: string): string[][] {
       const [cellCountRaw, valueRaw = ''] = splitOnce(cellChunk, '.');
       const cellCount = Number(cellCountRaw);
       if (!Number.isFinite(cellCount) || cellCount <= 0) {
-        throw new PixelmationFormatError(`Некорректный повтор клетки в legacy-данных: ${cellChunk}`);
+        throw new PixelmationFormatError(`Некорректный повтор клетки в упакованных данных: ${cellChunk}`);
       }
       for (let i = 0; i < cellCount; i++) row.push(valueRaw);
     }
     for (let i = 0; i < count; i++) rows.push(row.slice());
   }
-  if (rows.length === 0) throw new PixelmationFormatError('Legacy-данные не содержат строк');
+  if (rows.length === 0) throw new PixelmationFormatError('Упакованные данные не содержат строк');
   return rows;
 }
 
@@ -64,7 +68,7 @@ function splitOnce(value: string, separator: string): [string, string] {
   return [value.slice(0, at), value.slice(at + separator.length)];
 }
 
-function encodeLegacyRows(rows: string[][]): string {
+function encodeRows(rows: string[][]): string {
   const packedRows = rows.map((row) => {
     const parts: string[] = [];
     let current = row[0];
@@ -98,25 +102,25 @@ function encodeLegacyRows(rows: string[][]): string {
   return parts.join(';');
 }
 
-function decodeLegacySlides(packed: string): string[][][] {
+function decodeSlides(packed: string): string[][][] {
   const slides: string[][][] = [];
   for (const chunk of packed.split('+')) {
     if (chunk === '') continue;
     const [countRaw, slideRaw = ''] = splitOnce(chunk, '!');
     const count = Number(countRaw);
     if (!Number.isFinite(count) || count <= 0) {
-      throw new PixelmationFormatError(`Некорректный повтор слайда в legacy-данных: ${chunk}`);
+      throw new PixelmationFormatError(`Некорректный повтор слайда в упакованных данных: ${chunk}`);
     }
-    const slide = decodeLegacyRows(slideRaw);
+    const slide = decodeRows(slideRaw);
     for (let i = 0; i < count; i++) slides.push(slide.map((row) => row.slice()));
   }
-  if (slides.length === 0) throw new PixelmationFormatError('Legacy-анимация не содержит слайдов');
+  if (slides.length === 0) throw new PixelmationFormatError('Анимация не содержит слайдов');
   return slides;
 }
 
-function encodeLegacySlides(slides: Slide[]): string {
+function encodeSlides(slides: Slide[]): string {
   const packed = slides.map((slide) =>
-    encodeLegacyRows(slide.map((row) => row.map((ref) => (ref === null ? 'null' : `${ref.y}-${ref.x}`)))),
+    encodeRows(slide.map((row) => row.map((ref) => (ref === null ? 'null' : `${ref.y}-${ref.x}`)))),
   );
   const parts: string[] = [];
   let current = packed[0];
@@ -134,8 +138,8 @@ function encodeLegacySlides(slides: Slide[]): string {
   return parts.join('+');
 }
 
-/** Legacy-ссылка `"строка-столбец"` → современная точка `{x: столбец, y: строка}`. */
-function parseLegacyRef(value: string): SlideCell {
+/** Ссылка `"строка-столбец"` из файла → точка `{x: столбец, y: строка}`. */
+function parseRef(value: string): SlideCell {
   if (value === 'null' || value === '' || value === 'undefined') return null;
   const [rowRaw, colRaw] = value.split('-');
   const row = Number(rowRaw);
@@ -175,7 +179,7 @@ function readName(data: Record<string, unknown>): string {
 
 function toCells(raw: unknown, what: string): TextureCells {
   if (typeof raw === 'string') {
-    return decodeLegacyRows(raw).map((row) => row.map((value) => normalizeColor(value)));
+    return decodeRows(raw).map((row) => row.map((value) => normalizeColor(value)));
   }
   if (!Array.isArray(raw)) {
     throw new PixelmationFormatError(`${what}: поле cells должно быть массивом строк или строкой`);
@@ -194,7 +198,7 @@ function toCells(raw: unknown, what: string): TextureCells {
 
 function toSlideCell(raw: unknown, what: string): SlideCell {
   if (raw === null || raw === undefined || raw === 'null') return null;
-  if (typeof raw === 'string') return parseLegacyRef(raw);
+  if (typeof raw === 'string') return parseRef(raw);
   if (Array.isArray(raw) && raw.length === 2) {
     const [x, y] = raw as [unknown, unknown];
     if (Number.isInteger(x) && Number.isInteger(y)) return { x: x as number, y: y as number };
@@ -214,9 +218,7 @@ function toSlideCell(raw: unknown, what: string): SlideCell {
 
 /** Опции сериализации. */
 export interface SerializeOptions {
-  /** Писать в legacy-формате Pixelmation 1.x (RLE-строки). */
-  legacy?: boolean;
-  /** Форматировать JSON с отступами. */
+  /** Форматировать JSON с отступами. Сами данные всё равно остаются строками. */
   pretty?: boolean;
 }
 
@@ -232,12 +234,10 @@ export function parseTexture(input: unknown): Texture {
 /** Сериализует текстуру в JSON. */
 export function serializeTexture(texture: Texture, options: SerializeOptions = {}): string {
   const normalized = normalizeTexture(texture);
-  const payload = options.legacy
-    ? {
-        name: normalized.name,
-        cells: encodeLegacyRows(normalized.cells.map((row) => row.map((cell) => cell ?? 'null'))),
-      }
-    : { name: normalized.name, cells: normalized.cells };
+  const payload = {
+    name: normalized.name,
+    cells: encodeRows(normalized.cells.map((row) => row.map((cell) => cell ?? 'null'))),
+  };
   return JSON.stringify(payload, null, options.pretty ? 2 : 0);
 }
 
@@ -252,10 +252,12 @@ export function parseAnimation(input: unknown): Animation {
 
   let slides: Slide[];
   if (typeof rawSlides === 'string') {
-    slides = decodeLegacySlides(rawSlides).map((slide) =>
-      slide.map((row) => row.map((value) => parseLegacyRef(value))),
+    // основной формат: RLE-строка
+    slides = decodeSlides(rawSlides).map((slide) =>
+      slide.map((row) => row.map((value) => parseRef(value))),
     );
   } else if (Array.isArray(rawSlides)) {
+    // legacy: развёрнутые массивы — читаем, но обратно так не пишем
     slides = rawSlides.map((slide) => {
       if (!Array.isArray(slide)) {
         throw new PixelmationFormatError('Анимация: каждый слайд должен быть массивом строк');
@@ -277,22 +279,14 @@ export function parseAnimation(input: unknown): Animation {
 /** Сериализует анимацию в JSON. */
 export function serializeAnimation(animation: Animation, options: SerializeOptions = {}): string {
   const normalized = sanitizeAnimation(animation);
-  const payload = options.legacy
-    ? {
-        name: normalized.name,
-        slides: encodeLegacySlides(normalized.slides),
-        texture: {
-          name: normalized.texture.name,
-          cells: encodeLegacyRows(
-            normalized.texture.cells.map((row) => row.map((cell) => cell ?? 'null')),
-          ),
-        },
-      }
-    : {
-        name: normalized.name,
-        slides: normalized.slides,
-        texture: { name: normalized.texture.name, cells: normalized.texture.cells },
-      };
+  const payload = {
+    name: normalized.name,
+    slides: encodeSlides(normalized.slides),
+    texture: {
+      name: normalized.texture.name,
+      cells: encodeRows(normalized.texture.cells.map((row) => row.map((cell) => cell ?? 'null'))),
+    },
+  };
   return JSON.stringify(payload, null, options.pretty ? 2 : 0);
 }
 

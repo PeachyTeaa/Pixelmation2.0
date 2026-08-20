@@ -191,7 +191,7 @@ export interface PixelmationApi {
   redo(): ReturnType<typeof summary>;
   toJSON(): string;
   textureJSON(): string;
-  download(options?: { legacy?: boolean }): ReturnType<typeof summary>;
+  download(): ReturnType<typeof summary>;
   setGrid(value: boolean): ReturnType<typeof summary>;
   setTheme(theme: 'dark' | 'light'): ReturnType<typeof summary>;
   setSpeed(ms: number): ReturnType<typeof summary>;
@@ -218,7 +218,7 @@ export function createAgentApi(): PixelmationApi {
       'pixelmation.addSlide() / duplicateSlide() / deleteSlide() / moveSlide(a,b) / gotoSlide(i)',
       'pixelmation.editTexture(true|false) — правка текстуры внутри анимации',
       'pixelmation.pngDataUrl({scale:8}) / gifDataUrl({scale:8,delayMs:150})',
-      'pixelmation.toJSON() / textureJSON() / download({legacy:false})',
+      'pixelmation.toJSON() / textureJSON() / download() — скачать файл',
       'pixelmation.undo() / redo() / play(true) / setSpeed(150)',
     ],
 
@@ -503,8 +503,8 @@ export function createAgentApi(): PixelmationApi {
       });
     },
 
-    download: (options = {}) => {
-      saveCurrentDocument(options);
+    download: () => {
+      saveCurrentDocument();
       return summary();
     },
 

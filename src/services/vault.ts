@@ -121,9 +121,9 @@ function serialize(input: VaultInput): string {
   // Внутри архива храним компактную RLE-запись: пиксель-арт сжимается в разы.
   if (input.kind === 'animation') {
     const animation: Animation = { name: input.name, slides: input.slides, texture: input.texture };
-    return serializeAnimation(animation, { legacy: true });
+    return serializeAnimation(animation);
   }
-  return serializeTexture({ ...input.texture, name: input.name }, { legacy: true });
+  return serializeTexture({ ...input.texture, name: input.name });
 }
 
 function describe(input: VaultInput, json: string, id: number): VaultMeta {

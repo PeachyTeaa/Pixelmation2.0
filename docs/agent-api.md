@@ -40,12 +40,12 @@ color, currentRef, tool, dirty }`), поэтому после каждого в�
 | --- | --- |
 | `newTexture(w, h, name?)` | новый холст текстуры |
 | `newAnimation(w, h, name?)` | новая анимация с пустой текстурой |
-| `openFile(fileName, content)` | открыть содержимое `.pxlmt` или `.pxlma` (в том числе legacy) |
+| `openFile(fileName, content)` | открыть содержимое `.pxlmt` или `.pxlma` (в том числе legacy-массивы) |
 | `loadTexture(data)` / `loadAnimation(data)` | загрузить объект или JSON-строку |
 | `close()` | вернуться на стартовый экран |
 | `setName(name)` | переименовать документ |
 | `toJSON()` / `textureJSON()` | сериализовать текущий документ / его текстуру |
-| `download({legacy})` | скачать файл браузером |
+| `download()` | скачать файл браузером |
 
 ### Рисование
 
@@ -126,7 +126,7 @@ npm run pxl -- <команда> [аргументы]
 | `gif` | `pxl gif run.pxlma run.gif --scale 8 --delay 150` |
 | `draw` | `pxl draw hero.pxlmt --line 0,0,15,15,"#f04438ff"` |
 | `slides` | `pxl slides run.pxlma copy --index 1` |
-| `convert` | `pxl convert hero.pxlmt hero-v1.pxlmt --legacy` |
+| `convert` | `pxl convert hero.pxlmt hero-copy.pxlmt` |
 
 Операции `draw` применяются в том порядке, в каком написаны, и все сразу
 сохраняются в файл; после выполнения печатается ASCII-превью результата.

@@ -81,7 +81,7 @@ const HELP = `pxl — Pixelmation в командной строке
       цвет сам займёт свободную клетку текстуры, если его там ещё нет.
 
   pxl slides <файл.pxlma> add|copy|delete|move|texture [--index n] [--to n]
-  pxl convert <вход> <выход> [--legacy]  пересохранить, в том числе в формат 1.x
+  pxl convert <вход> <выход>             пересохранить (в том числе legacy-файл с массивами)
 
 Цвета: #rgb, #rrggbb, #rrggbbaa, rgba(...), "null" — прозрачность.
 Нумерация кадров в аргументах — с единицы, координаты — с нуля.`;
@@ -135,11 +135,11 @@ function readDocument(path: string): Document {
   return { kind: 'texture', texture: parseTexture(data) };
 }
 
-function writeDocument(path: string, document: Document, legacy = false): void {
+function writeDocument(path: string, document: Document): void {
   const json =
     document.kind === 'texture'
-      ? serializeTexture(document.texture, { pretty: true, legacy })
-      : serializeAnimation(document.animation, { pretty: true, legacy });
+      ? serializeTexture(document.texture)
+      : serializeAnimation(document.animation);
   writeFileSync(path, json, 'utf8');
 }
 
@@ -422,8 +422,8 @@ function commandSlides(args: ParsedArgs): void {
 function commandConvert(args: ParsedArgs): void {
   const [, input, output] = args.positional;
   if (!input || !output) fail('Нужно: pxl convert <вход> <выход>');
-  writeDocument(output, readDocument(input), Boolean(args.flags.legacy));
-  console.log(`Сохранено: ${output}${args.flags.legacy ? ' (формат 1.x)' : ''}`);
+  writeDocument(output, readDocument(input));
+  console.log(`Сохранено: ${output}`);
 }
 
 function main(): void {

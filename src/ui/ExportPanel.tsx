@@ -14,7 +14,6 @@ export function ExportPanel() {
   const canvasBg = useEditorStore((state) => state.canvasBg);
   const speed = useEditorStore((state) => state.speed);
   const [scale, setScale] = useState(8);
-  const [legacy, setLegacy] = useState(false);
   const [withBackground, setWithBackground] = useState(false);
 
   const background = withBackground ? canvasBg : null;
@@ -29,13 +28,10 @@ export function ExportPanel() {
 
   return (
     <Panel title="Экспорт">
-      <Button variant="primary" block onClick={() => saveCurrentDocument({ legacy })}>
+      <Button variant="primary" block onClick={() => saveCurrentDocument()}>
         Сохранить {mode === 'texture' ? '.pxlmt' : '.pxlma'} · Ctrl+S
       </Button>
 
-      <Switch checked={legacy} onChange={setLegacy}>
-        Формат Pixelmation 1.x
-      </Switch>
       <Switch checked={withBackground} onChange={setWithBackground}>
         Подложить фон холста
       </Switch>

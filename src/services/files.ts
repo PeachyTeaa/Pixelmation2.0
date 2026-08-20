@@ -24,17 +24,17 @@ export function downloadBlob(fileName: string, blob: Blob): void {
 }
 
 /** Сохраняет текстуру в `.pxlmt`. */
-export function saveTexture(texture: Texture, options: { legacy?: boolean } = {}): string {
+export function saveTexture(texture: Texture): string {
   const fileName = toFileName(texture.name, TEXTURE_EXT);
-  const json = serializeTexture(texture, { pretty: true, legacy: options.legacy });
+  const json = serializeTexture(texture);
   downloadBlob(fileName, new Blob([json], { type: 'application/json' }));
   return fileName;
 }
 
 /** Сохраняет анимацию в `.pxlma`. */
-export function saveAnimation(animation: Animation, options: { legacy?: boolean } = {}): string {
+export function saveAnimation(animation: Animation): string {
   const fileName = toFileName(animation.name, ANIMATION_EXT);
-  const json = serializeAnimation(animation, { pretty: true, legacy: options.legacy });
+  const json = serializeAnimation(animation);
   downloadBlob(fileName, new Blob([json], { type: 'application/json' }));
   return fileName;
 }
