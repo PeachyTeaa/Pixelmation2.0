@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { MAX_CANVAS_SIZE, MIN_CANVAS_SIZE, clampCanvasSize, textureSize } from '~/core';
+import { MAX_CANVAS_SIZE, MIN_CANVAS_SIZE, textureSize } from '~/core';
 import { useEditorStore } from '~/state/store';
 import type { Tool } from '~/state/types';
-import { Button, Field, Input, Label, Panel, Switch } from './kit';
+import { Button, Field, Label, NumberInput, Panel, Switch } from './kit';
 import styles from './Editor.module.css';
 
 const TOOLS: Array<{ id: Tool; name: string; hotkey: string }> = [
@@ -107,21 +107,21 @@ function ResizeForm() {
       <Label>Размер холста</Label>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.4rem', alignItems: 'end' }}>
         <Field label="Ш">
-          <Input
-            type="number"
+          <NumberInput
             min={MIN_CANVAS_SIZE}
             max={MAX_CANVAS_SIZE}
             value={width}
-            onChange={(event) => setWidth(clampCanvasSize(+event.target.value))}
+            onChange={setWidth}
+            aria-label="Ширина холста"
           />
         </Field>
         <Field label="В">
-          <Input
-            type="number"
+          <NumberInput
             min={MIN_CANVAS_SIZE}
             max={MAX_CANVAS_SIZE}
             value={height}
-            onChange={(event) => setHeight(clampCanvasSize(+event.target.value))}
+            onChange={setHeight}
+            aria-label="Высота холста"
           />
         </Field>
         <Button size="sm" disabled={!changed} onClick={() => resizeDocument(width, height)}>

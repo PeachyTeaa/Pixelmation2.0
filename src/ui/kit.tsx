@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -114,6 +115,54 @@ export function Field({
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cx(styles.input, className)} {...rest} />;
+}
+
+interface NumberInputProps {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  'aria-label'?: string;
+  className?: string;
+}
+
+/**
+ * Поле для числа, которое не мешает печатать: пока фокус внутри, можно стереть
+ * всё до пустого и набрать заново. К допустимому диапазону значение приводится
+ * при потере фокуса, а не на каждое нажатие.
+ */
+export function NumberInput({ value, min, max, onChange, className, ...rest }: NumberInputProps) {
+  const [text, setText] = useState(String(value));
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (!editing) setText(String(value));
+  }, [value, editing]);
+
+  const clamp = (input: number): number => Math.min(max, Math.max(min, Math.floor(input)));
+
+  return (
+    <Input
+      {...rest}
+      className={className}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      value={text}
+      onFocus={() => setEditing(true)}
+      onChange={(event) => {
+        const digits = event.target.value.replace(/\D+/g, '');
+        setText(digits);
+        if (digits !== '') onChange(clamp(Number(digits)));
+      }}
+      onBlur={() => {
+        setEditing(false);
+        const next = text === '' ? value : clamp(Number(text));
+        setText(String(next));
+        if (next !== value) onChange(next);
+      }}
+    />
+  );
 }
 
 export function Row({ children, className }: { children: ReactNode; className?: string }) {

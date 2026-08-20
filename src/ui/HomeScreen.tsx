@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { MAX_CANVAS_SIZE, MIN_CANVAS_SIZE, SIZE_PRESETS, clampCanvasSize } from '~/core';
+import { MAX_CANVAS_SIZE, MIN_CANVAS_SIZE, SIZE_PRESETS } from '~/core';
 import { DEFAULT_SIZE, useEditorStore } from '~/state/store';
-import { Button, Field, Input, Label } from './kit';
+import { Button, Field, Input, Label, NumberInput } from './kit';
 import styles from './HomeScreen.module.css';
 
 interface HomeScreenProps {
@@ -57,21 +57,21 @@ export function HomeScreen({ onOpen }: HomeScreenProps) {
 
         <div className={styles.sizes}>
           <Field label="Ширина">
-            <Input
-              type="number"
+            <NumberInput
               min={MIN_CANVAS_SIZE}
               max={MAX_CANVAS_SIZE}
               value={width}
-              onChange={(event) => setWidth(clampCanvasSize(+event.target.value))}
+              onChange={setWidth}
+              aria-label="Ширина холста"
             />
           </Field>
           <Field label="Высота">
-            <Input
-              type="number"
+            <NumberInput
               min={MIN_CANVAS_SIZE}
               max={MAX_CANVAS_SIZE}
               value={height}
-              onChange={(event) => setHeight(clampCanvasSize(+event.target.value))}
+              onChange={setHeight}
+              aria-label="Высота холста"
             />
           </Field>
           <Field label="Имя">
