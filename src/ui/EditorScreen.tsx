@@ -7,6 +7,7 @@ import { ExportPanel } from './ExportPanel';
 import { PixelCanvas } from './PixelCanvas';
 import { RefPanel } from './RefPanel';
 import { SlidesTimeline } from './SlidesTimeline';
+import { TextureFileButton } from './TextureFileButton';
 import { ToolsPanel } from './ToolsPanel';
 import { usePainter } from './usePainter';
 import styles from './Editor.module.css';
@@ -73,6 +74,8 @@ export function EditorScreen() {
                 </Button>
               </div>
             )}
+
+            {mode === 'animation' && animationTab === 'texture' && <TextureFileButton />}
 
             <span className={styles.grow} />
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { countPainted, countPaintedRefs, setPixel } from '~/core';
+import { countPainted, countPaintedRefs, createTexture, resolveRef, setPixel } from '~/core';
 import { useEditorStore } from './store';
 
 const store = () => useEditorStore.getState();
@@ -169,5 +169,89 @@ describe('анимация', () => {
     store().setRef(null);
     store().pick({ x: 1, y: 1 });
     expect(store().currentRef).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('подмена текстуры', () => {
+  beforeEach(() => {
+    store().newDocument('animation', 3, 3, 'бег');
+    useEditorStore.setState({ texture: setPixel(store().texture, 0, 0, '#00ff00ff') });
+    store().setRef({ x: 0, y: 0 });
+    store().paint([{ x: 2, y: 2 }]);
+  });
+
+  const textureWith = (size: number, points: Array<[number, number, string]>) =>
+    points.reduce(
+      (texture, [x, y, color]) => setPixel(texture, x, y, color),
+      createTexture(size, size, 'другая'),
+    );
+
+  it('текстура того же размера перекрашивает кадры, не трогая ссылки', () => {
+    store().replaceTexture(textureWith(3, [[0, 0, '#0000ffff']]));
+
+    expect(store().texture.cells[0][0]).toBe('#0000ffff');
+    expect(store().slides[0][2][2]).toEqual({ x: 0, y: 0 });
+    expect(resolveRef(store().texture, store().slides[0][2][2])).toBe('#0000ffff');
+  });
+
+  it('не меняет имя документа', () => {
+    store().replaceTexture(textureWith(3, [[0, 0, '#0000ffff']]));
+    expect(store().documentName).toBe('бег');
+  });
+
+  it('по умолчанию подстраивает холст под размер текстуры', () => {
+    store().replaceTexture(textureWith(5, [[0, 0, '#0000ffff']]));
+
+    expect(store().texture.cells).toHaveLength(5);
+    expect(store().slides[0]).toHaveLength(5);
+    expect(store().slides[0][0]).toHaveLength(5);
+    expect(store().slides[0][2][2]).toEqual({ x: 0, y: 0 });
+  });
+
+  it('с fit вписывает текстуру в текущий холст', () => {
+    store().replaceTexture(
+      textureWith(5, [
+        [0, 0, '#0000ffff'],
+        [4, 4, '#ff00ffff'],
+      ]),
+      { fit: true },
+    );
+
+    expect(store().texture.cells).toHaveLength(3);
+    expect(store().slides[0]).toHaveLength(3);
+    expect(store().texture.cells[0][0]).toBe('#0000ffff');
+    expect(countPainted(store().texture)).toBe(1);
+    expect(store().slides[0][2][2]).toEqual({ x: 0, y: 0 });
+  });
+
+  it('обнуляет ссылки на пиксели, которых в новой текстуре нет', () => {
+    store().replaceTexture(textureWith(3, [[1, 1, '#0000ffff']]));
+
+    expect(store().slides[0][2][2]).toBeNull();
+    expect(countPaintedRefs(store().slides[0])).toBe(0);
+  });
+
+  it('сбрасывает выбранную ссылку', () => {
+    store().replaceTexture(textureWith(3, [[0, 0, '#0000ffff']]));
+    expect(store().currentRef).toBeNull();
+  });
+
+  it('откатывается по Ctrl+Z вместе с кадрами', () => {
+    store().replaceTexture(textureWith(5, [[0, 0, '#0000ffff']]));
+    store().undo();
+
+    expect(store().texture.cells).toHaveLength(3);
+    expect(store().texture.cells[0][0]).toBe('#00ff00ff');
+    expect(store().slides[0][2][2]).toEqual({ x: 0, y: 0 });
+    expect(store().dirty).toBe(true);
+  });
+
+  it('в режиме текстуры просто меняет холст', () => {
+    store().newDocument('texture', 3, 3, 'лист');
+    store().replaceTexture(textureWith(5, [[4, 4, '#0000ffff']]));
+
+    expect(store().texture.cells).toHaveLength(5);
+    expect(store().texture.cells[4][4]).toBe('#0000ffff');
+    expect(store().slides).toHaveLength(0);
   });
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { NumberInput } from './kit';
+import { Modal, NumberInput, Panel } from './kit';
 
 /** Обёртка-контейнер: поле управляемое, как в настоящих экранах. */
 function Harness({ initial = 32 }: { initial?: number }) {
@@ -67,5 +67,23 @@ describe('NumberInput', () => {
     await user.clear(field());
     await user.type(field(), '1a2b');
     expect(field().value).toBe('12');
+  });
+});
+
+describe('модальное окно', () => {
+  it('рисуется в body, а не внутри панели', () => {
+    // У панели есть backdrop-filter: она становится системой координат для
+    // position: fixed, и вложенное окно зажалось бы в её габариты.
+    const { container } = render(
+      <Panel title="Панель">
+        <Modal open title="Окно" onClose={() => {}}>
+          тело
+        </Modal>
+      </Panel>,
+    );
+
+    const dialog = screen.getByRole('dialog');
+    expect(document.body).toContainElement(dialog);
+    expect(container).not.toContainElement(dialog);
   });
 });

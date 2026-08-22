@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   addSlide as addSlideOp,
   clampCanvasSize,
+  cloneTexture,
   createSlide,
   createTexture,
   deleteSlide as deleteSlideOp,
@@ -23,6 +24,7 @@ import {
   shiftGrid,
   shiftTexture,
   textureSize,
+  withTexture,
   type Animation,
   type Cell,
   type HexColor,
@@ -98,6 +100,8 @@ interface Actions {
   shiftBy: (dx: number, dy: number) => void;
   clearCanvas: () => void;
   resizeDocument: (width: number, height: number) => void;
+  /** Подменяет текстуру документа файлом другой текстуры. */
+  replaceTexture: (texture: Texture, options?: { fit?: boolean }) => void;
 
   gotoSlide: (index: number) => void;
   nextSlide: () => void;
@@ -378,6 +382,21 @@ export const useEditorStore = create<EditorState>()(
             }
             return { texture: resizeTexture(current.texture, width, height) };
           });
+        },
+
+        replaceTexture: (texture, options) => {
+          const fit = options?.fit ?? false;
+          commit((current) => {
+            if (current.mode !== 'animation') {
+              return { texture: cloneTexture(texture) };
+            }
+            const size = textureSize(current.texture);
+            const source = fit ? resizeTexture(texture, size.width, size.height) : texture;
+            const animation = withTexture(toAnimation(current), source);
+            return { texture: animation.texture, slides: animation.slides };
+          });
+          // Старая ссылка после подмены указывает уже не на тот пиксель.
+          set({ currentRef: null });
         },
 
         gotoSlide: (index) => {

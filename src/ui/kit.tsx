@@ -5,6 +5,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './kit.module.css';
 
 const cx = (...values: Array<string | false | null | undefined>): string =>
@@ -224,7 +225,9 @@ export function Modal({
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  // Панели вокруг размывают фон (backdrop-filter), а это ломает position: fixed
+  // у вложенных элементов — поэтому окно всегда рисуем в body.
+  return createPortal(
     <div className={styles.overlay} onMouseDown={onClose} role="presentation">
       <div
         className={cx(styles.modal, wide && styles.modalWide)}
@@ -241,7 +244,8 @@ export function Modal({
         {children}
         {footer}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

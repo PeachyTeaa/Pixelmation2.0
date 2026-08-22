@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '~/state/store';
 import { exportAnimationGif, exportSlidePng, exportTexturePng } from '~/services/exportImage';
 import { currentAnimation, currentTexture, saveCurrentDocument } from '~/services/save';
+import { saveTexture } from '~/services/files';
 import { toast, toastError } from '~/services/toast';
 import { Button, Field, Label, Panel, Row, Switch } from './kit';
 import styles from './Editor.module.css';
@@ -10,6 +11,7 @@ const SCALES = [1, 4, 8, 16];
 
 export function ExportPanel() {
   const mode = useEditorStore((state) => state.mode);
+  const animationTab = useEditorStore((state) => state.animationTab);
   const currentSlide = useEditorStore((state) => state.currentSlide);
   const canvasBg = useEditorStore((state) => state.canvasBg);
   const speed = useEditorStore((state) => state.speed);
@@ -52,6 +54,11 @@ export function ExportPanel() {
         </Button>
       ) : (
         <>
+          {animationTab === 'texture' && (
+            <Button block onClick={() => run(() => saveTexture(currentTexture()))}>
+              Текстура .pxlmt
+            </Button>
+          )}
           <Button
             block
             onClick={() => run(() => exportSlidePng(currentAnimation(), currentSlide, { scale, background }))}
