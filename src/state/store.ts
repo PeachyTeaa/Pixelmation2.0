@@ -70,6 +70,12 @@ interface ViewState {
 interface HistoryState {
   past: Snapshot[];
   future: Snapshot[];
+  /**
+   * Глубина начатого мазка. Пока она больше нуля, правки складываются в одну
+   * запись истории — снимок для неё сделал `beginStroke`. Поэтому счётчик
+   * обязан обнуляться всюду, где история начинается заново: иначе повисший
+   * мазок молча съест все следующие изменения и отменять станет нечего.
+   */
   strokeDepth: number;
   dirty: boolean;
 }
@@ -240,6 +246,7 @@ export const useEditorStore = create<EditorState>()(
             animationTab: 'slides',
             past: [],
             future: [],
+            strokeDepth: 0,
             dirty: false,
             isPlaying: false,
             saveTarget: null,
@@ -259,6 +266,7 @@ export const useEditorStore = create<EditorState>()(
             animationTab: 'slides',
             past: [],
             future: [],
+            strokeDepth: 0,
             dirty: false,
             isPlaying: false,
             saveTarget: null,
@@ -275,6 +283,7 @@ export const useEditorStore = create<EditorState>()(
             animationTab: 'slides',
             past: [],
             future: [],
+            strokeDepth: 0,
             dirty: false,
             isPlaying: false,
             saveTarget: null,
@@ -282,7 +291,15 @@ export const useEditorStore = create<EditorState>()(
         },
 
         closeDocument: () =>
-          set({ ...initialDocument, past: [], future: [], dirty: false, isPlaying: false, saveTarget: null }),
+          set({
+            ...initialDocument,
+            past: [],
+            future: [],
+            strokeDepth: 0,
+            dirty: false,
+            isPlaying: false,
+            saveTarget: null,
+          }),
 
         setName: (name) => commit(() => ({ documentName: name })),
 

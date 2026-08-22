@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ellipsePoints, linePoints, rectPoints, resolveRef, type Cell, type Point } from '~/core';
 import { isTextureSurface, useEditorStore } from '~/state/store';
 import type { CanvasButton } from './PixelCanvas';
@@ -110,6 +110,26 @@ export function usePainter() {
     },
     [shapePoints],
   );
+
+  /**
+   * Страховка на случай, когда кнопку отпустили мимо холста: захват указателя
+   * теряется, `onCellUp` не приходит, и незакрытый мазок отключает историю —
+   * отменять становится нечего. Событие с холста сюда тоже доходит, но там
+   * мазок уже закрыт и `dragRef` пуст, так что второй раз ничего не случится.
+   */
+  useEffect(() => {
+    const finish = (): void => {
+      if (dragRef.current) onCellUp(null);
+    };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    window.addEventListener('blur', finish);
+    return () => {
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+      window.removeEventListener('blur', finish);
+    };
+  }, [onCellUp]);
 
   const previewColor = usePreviewColor();
 

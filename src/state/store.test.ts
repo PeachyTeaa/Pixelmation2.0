@@ -100,6 +100,27 @@ describe('история', () => {
     store().redo();
     expect(countPainted(store().texture)).toBe(0);
   });
+
+  it('незавершённый мазок не отключает историю у нового документа', () => {
+    // Мазок начат, но кнопку отпустили мимо холста — endStroke не пришёл.
+    store().beginStroke();
+    store().paint([{ x: 0, y: 0 }]);
+
+    store().newDocument('animation', 4, 4, 'бег');
+    store().addSlide();
+
+    expect(store().past).toHaveLength(1);
+  });
+
+  it('загрузка файла тоже закрывает подвисший мазок', () => {
+    store().beginStroke();
+    store().paint([{ x: 0, y: 0 }]);
+
+    store().loadTexture(createTexture(4, 4, 'лист'));
+    store().paint([{ x: 1, y: 1 }]);
+
+    expect(store().past).toHaveLength(1);
+  });
 });
 
 describe('анимация', () => {
