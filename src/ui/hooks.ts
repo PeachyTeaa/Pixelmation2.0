@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useEditorStore } from '~/state/store';
 import { readProjectFile } from '~/services/files';
+import { rememberTarget } from '~/services/fileTarget';
 import { toast, toastError } from '~/services/toast';
 
 /** Не перехватываем горячие клавиши, пока пользователь печатает. */
@@ -12,6 +13,7 @@ function isTyping(target: EventTarget | null): boolean {
 
 export interface HotkeyHandlers {
   onSave: () => void;
+  onSaveAs: () => void;
   onToggleHelp: () => void;
 }
 
@@ -19,9 +21,10 @@ export interface HotkeyHandlers {
  * Горячие клавиши редактора.
  *
  * A / ← и D / → — слайды по кругу, Ctrl+Z и Ctrl+Shift+Z — история,
- * Ctrl+S — сохранение, E — прозрачный цвет, G — заливка, F — перемещение.
+ * Ctrl+S — сохранение поверх файла, Ctrl+Shift+S — сохранение как копии,
+ * E — прозрачный цвет, G — заливка, F — перемещение.
  */
-export function useHotkeys({ onSave, onToggleHelp }: HotkeyHandlers): void {
+export function useHotkeys({ onSave, onSaveAs, onToggleHelp }: HotkeyHandlers): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isTyping(event.target)) return;
@@ -45,7 +48,8 @@ export function useHotkeys({ onSave, onToggleHelp }: HotkeyHandlers): void {
             return;
           case 'KeyS':
             event.preventDefault();
-            onSave();
+            if (event.shiftKey) onSaveAs();
+            else onSave();
             return;
           default:
             return;
@@ -119,7 +123,7 @@ export function useHotkeys({ onSave, onToggleHelp }: HotkeyHandlers): void {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onSave, onToggleHelp]);
+  }, [onSave, onSaveAs, onToggleHelp]);
 }
 
 /** Предупреждение о несохранённом прогрессе при закрытии вкладки. */
@@ -137,6 +141,19 @@ export function useUnsavedWarning(): void {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty, mode]);
+}
+
+/** Дескриптор перетащенного файла — там, где браузер умеет его отдать. */
+async function fileHandleOf(item: DataTransferItem | undefined): Promise<FileSystemFileHandle | null> {
+  const get = (item as { getAsFileSystemHandle?: () => Promise<FileSystemHandle | null> } | undefined)
+    ?.getAsFileSystemHandle;
+  if (!get || !item) return null;
+  try {
+    const handle = await get.call(item);
+    return handle && handle.kind === 'file' ? (handle as FileSystemFileHandle) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Перетаскивание файлов проекта в окно. */
@@ -166,6 +183,8 @@ export function useFileDrop(): boolean {
       depth = 0;
       setIsOver(false);
       const file = event.dataTransfer.files[0];
+      // Перетаскивание тоже может дать дескриптор — тогда Ctrl+S пишет в этот файл.
+      const handle = await fileHandleOf(event.dataTransfer.items[0]);
       try {
         const result = await readProjectFile(file);
         const store = useEditorStore.getState();
@@ -175,6 +194,10 @@ export function useFileDrop(): boolean {
         } else {
           store.loadAnimation(result.animation);
           toast(`Анимация «${result.animation.name || file.name}» загружена`);
+        }
+        if (handle) {
+          await rememberTarget(handle);
+          useEditorStore.getState().setSaveTarget(handle.name);
         }
       } catch (error) {
         toastError(error);

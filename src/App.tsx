@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { useEditorStore } from '~/state/store';
-import { pickFile, readProjectFile } from '~/services/files';
-import { saveCurrentDocument } from '~/services/save';
+import { readProjectFile } from '~/services/files';
+import { openProjectFile, rememberTarget } from '~/services/fileTarget';
+import { saveCurrentDocument, saveDocumentAs, startSaveTarget } from '~/services/save';
 import { getToasts, subscribeToasts, toast, toastError } from '~/services/toast';
 import { EditorScreen } from '~/ui/EditorScreen';
 import { Header } from '~/ui/Header';
@@ -27,16 +28,20 @@ export default function App() {
   useThemeClass();
   // Архив восстановления пишется в фоне всё время, пока приложение открыто.
   useEffect(() => startVaultWatcher(), []);
+  // Файл, в который пишет Ctrl+S: поднимаем из прошлого сеанса и следим за сменой документа.
+  useEffect(() => startSaveTarget(), []);
   useUnsavedWarning();
   usePlayback();
 
-  const handleSave = useCallback(() => saveCurrentDocument(), []);
+  const handleSave = useCallback(() => void saveCurrentDocument(), []);
+  const handleSaveAs = useCallback(() => void saveDocumentAs(), []);
   const handleHelp = useCallback(() => setHelpOpen((open) => !open), []);
-  useHotkeys({ onSave: handleSave, onToggleHelp: handleHelp });
+  useHotkeys({ onSave: handleSave, onSaveAs: handleSaveAs, onToggleHelp: handleHelp });
 
   const handleOpen = useCallback(async () => {
-    const file = await pickFile();
-    if (!file) return;
+    const picked = await openProjectFile();
+    if (!picked) return;
+    const { file, handle } = picked;
     try {
       const result = await readProjectFile(file);
       const store = useEditorStore.getState();
@@ -46,6 +51,11 @@ export default function App() {
       } else {
         store.loadAnimation(result.animation);
         toast(`Анимация «${result.animation.name || file.name}» загружена`);
+      }
+      // Открытый файл сразу становится целью: Ctrl+S будет писать прямо в него.
+      if (handle) {
+        await rememberTarget(handle);
+        useEditorStore.getState().setSaveTarget(handle.name);
       }
     } catch (error) {
       toastError(error);
@@ -62,6 +72,7 @@ export default function App() {
     <div style={appBg ? { background: appBg, minHeight: '100%' } : { minHeight: '100%' }}>
       <Header
         onSave={handleSave}
+        onSaveAs={handleSaveAs}
         onOpen={handleOpen}
         onHelp={handleHelp}
         onHome={handleHome}

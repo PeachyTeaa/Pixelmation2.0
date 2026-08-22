@@ -23,20 +23,36 @@ export function downloadBlob(fileName: string, blob: Blob): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Сохраняет текстуру в `.pxlmt`. */
-export function saveTexture(texture: Texture): string {
-  const fileName = toFileName(texture.name, TEXTURE_EXT);
-  const json = serializeTexture(texture);
+/** Имя файла и его содержимое — до того, как решено, куда это класть. */
+export interface ProjectFile {
+  fileName: string;
+  json: string;
+}
+
+/** Текстура как файл `.pxlmt`. */
+export function textureFile(texture: Texture): ProjectFile {
+  return { fileName: toFileName(texture.name, TEXTURE_EXT), json: serializeTexture(texture) };
+}
+
+/** Анимация как файл `.pxlma`. */
+export function animationFile(animation: Animation): ProjectFile {
+  return { fileName: toFileName(animation.name, ANIMATION_EXT), json: serializeAnimation(animation) };
+}
+
+/** Скачивает готовый файл проекта копией в «Загрузки». */
+export function downloadProjectFile({ fileName, json }: ProjectFile): string {
   downloadBlob(fileName, new Blob([json], { type: 'application/json' }));
   return fileName;
 }
 
-/** Сохраняет анимацию в `.pxlma`. */
+/** Скачивает текстуру в `.pxlmt`. */
+export function saveTexture(texture: Texture): string {
+  return downloadProjectFile(textureFile(texture));
+}
+
+/** Скачивает анимацию в `.pxlma`. */
 export function saveAnimation(animation: Animation): string {
-  const fileName = toFileName(animation.name, ANIMATION_EXT);
-  const json = serializeAnimation(animation);
-  downloadBlob(fileName, new Blob([json], { type: 'application/json' }));
-  return fileName;
+  return downloadProjectFile(animationFile(animation));
 }
 
 /** Читает файл как текст. */

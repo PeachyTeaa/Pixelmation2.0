@@ -59,6 +59,12 @@ interface ViewState {
   animationTab: AnimationTab;
   isPlaying: boolean;
   speed: number;
+  /**
+   * Имя файла на диске, поверх которого пишет Ctrl+S. `null` — привязки нет,
+   * сохранение спросит, куда класть. Живёт только в сеансе: сам файловый
+   * дескриптор в localStorage не положить, его хранит `services/fileTarget`.
+   */
+  saveTarget: string | null;
 }
 
 interface HistoryState {
@@ -90,6 +96,7 @@ interface Actions {
   setAnimationTab: (tab: AnimationTab) => void;
   setSpeed: (ms: number) => void;
   setPlaying: (value: boolean) => void;
+  setSaveTarget: (name: string | null) => void;
 
   paint: (points: Point[]) => void;
   erase: (points: Point[]) => void;
@@ -173,6 +180,7 @@ const initialView: ViewState = {
   animationTab: 'slides',
   isPlaying: false,
   speed: 200,
+  saveTarget: null,
 };
 
 export const useEditorStore = create<EditorState>()(
@@ -234,6 +242,7 @@ export const useEditorStore = create<EditorState>()(
             future: [],
             dirty: false,
             isPlaying: false,
+            saveTarget: null,
           });
         },
 
@@ -252,6 +261,7 @@ export const useEditorStore = create<EditorState>()(
             future: [],
             dirty: false,
             isPlaying: false,
+            saveTarget: null,
           });
         },
 
@@ -267,10 +277,12 @@ export const useEditorStore = create<EditorState>()(
             future: [],
             dirty: false,
             isPlaying: false,
+            saveTarget: null,
           });
         },
 
-        closeDocument: () => set({ ...initialDocument, past: [], future: [], dirty: false, isPlaying: false }),
+        closeDocument: () =>
+          set({ ...initialDocument, past: [], future: [], dirty: false, isPlaying: false, saveTarget: null }),
 
         setName: (name) => commit(() => ({ documentName: name })),
 
@@ -295,6 +307,7 @@ export const useEditorStore = create<EditorState>()(
         setTheme: (theme) => set({ theme }),
         setSpeed: (speed) => set({ speed: Math.min(2000, Math.max(20, Math.round(speed))) }),
         setPlaying: (isPlaying) => set({ isPlaying }),
+        setSaveTarget: (saveTarget) => set({ saveTarget }),
 
         setAnimationTab: (tab) => {
           const state = get();

@@ -255,3 +255,50 @@ describe('подмена текстуры', () => {
     expect(store().slides).toHaveLength(0);
   });
 });
+
+describe('привязка к файлу на диске', () => {
+  it('у нового документа цели сохранения нет', () => {
+    expect(store().saveTarget).toBeNull();
+  });
+
+  it('запоминает имя файла, в который пишем', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    expect(store().saveTarget).toBe('лиса.pxlmt');
+  });
+
+  it('создание документа рвёт привязку к прежнему файлу', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    store().newDocument('texture', 4, 4, 'новый');
+    expect(store().saveTarget).toBeNull();
+  });
+
+  it('загрузка текстуры рвёт привязку', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    store().loadTexture(createTexture(4, 4, 'другая'));
+    expect(store().saveTarget).toBeNull();
+  });
+
+  it('загрузка анимации рвёт привязку', () => {
+    store().setSaveTarget('бег.pxlma');
+    store().loadAnimation({ name: 'другой', texture: createTexture(4, 4), slides: [] });
+    expect(store().saveTarget).toBeNull();
+  });
+
+  it('закрытие документа рвёт привязку', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    store().closeDocument();
+    expect(store().saveTarget).toBeNull();
+  });
+
+  it('рисование привязку не трогает', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    store().paint([{ x: 0, y: 0 }]);
+    expect(store().saveTarget).toBe('лиса.pxlmt');
+  });
+
+  it('не переживает перезагрузку через localStorage', () => {
+    store().setSaveTarget('лиса.pxlmt');
+    const saved = localStorage.getItem('pixelmation.editor') ?? '';
+    expect(saved).not.toContain('saveTarget');
+  });
+});

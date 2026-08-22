@@ -5,19 +5,21 @@ import styles from './Header.module.css';
 
 interface HeaderProps {
   onSave: () => void;
+  onSaveAs: () => void;
   onVault: () => void;
   onOpen: () => void;
   onHelp: () => void;
   onHome: () => void;
 }
 
-export function Header({ onSave, onOpen, onHelp, onHome, onVault }: HeaderProps) {
+export function Header({ onSave, onSaveAs, onOpen, onHelp, onHome, onVault }: HeaderProps) {
   const mode = useEditorStore((state) => state.mode);
   const name = useEditorStore((state) => state.documentName);
   const dirty = useEditorStore((state) => state.dirty);
   const theme = useEditorStore((state) => state.theme);
   const setName = useEditorStore((state) => state.setName);
   const setTheme = useEditorStore((state) => state.setTheme);
+  const saveTarget = useEditorStore((state) => state.saveTarget);
 
   return (
     <header className={styles.header}>
@@ -51,9 +53,19 @@ export function Header({ onSave, onOpen, onHelp, onHome, onVault }: HeaderProps)
             Открыть
           </Button>
           {mode && (
-            <Button size="sm" variant="primary" onClick={onSave} title="Ctrl+S">
-              Сохранить
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={onSave}
+                title={saveTarget ? `Перезаписать ${saveTarget} · Ctrl+S` : 'Выбрать файл · Ctrl+S'}
+              >
+                Сохранить
+              </Button>
+              <Button size="sm" onClick={onSaveAs} title="Сохранить копией в новый файл · Ctrl+Shift+S">
+                Сохранить как…
+              </Button>
+            </>
           )}
           <Button size="sm" icon onClick={onVault} title="Восстановление: архив последних работ">
             ⟲
